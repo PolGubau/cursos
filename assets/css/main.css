@@ -1,0 +1,6 @@
+
+@import "tailwindcss";
+ 
+:root{
+  @apply bg-stone-100 text-stone-900 dark:bg-stone-900 dark:text-stone-100;
+ }
