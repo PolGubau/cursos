@@ -1,4 +1,3 @@
-
 <script setup>
 definePageMeta({
 	title: "Catalogs",
@@ -12,5 +11,10 @@ definePageMeta({
   <div>
     <h1>Catalogs</h1>
     <p>Welcome to the catalogs page where you can find various items.</p>
-  </div>  
+
+    
+    <Counter />
+    <Counter />
+
+  </div>
 </template>
