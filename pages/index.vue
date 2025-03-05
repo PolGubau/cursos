@@ -8,8 +8,7 @@ const { x, y } = useMouse();
 // $sayHello("Greetings from the Home Page!");
 
 // const apiResponse = await $fetch("/api/query?foo=bar&baz=qux");
-const { data, error } = await useFetch('/api/hello');
-
+const { data, error,status } = await useFetch('/api/hello');
 if (error.value) {
   console.error("Error en API:", error.value);
 }
@@ -20,8 +19,7 @@ console.log(data.value);
 <template>
   <div>
 
-    {{ JSON.stringify(store) }}
-    
+     
     
     <h1 class="text-3xl font-bold">
       Hello World {{ store.$state.name }}

@@ -1,7 +1,4 @@
+import data from "./posts.json";
 export default defineEventHandler(() => {
-	return {
-		message: "Hello, world!",
-		timestamp: Date.now(),
-		status: 200,
-	};
+	return data;
 });
