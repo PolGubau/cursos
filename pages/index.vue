@@ -69,10 +69,10 @@ const morsedText = computed(() => {
 
 
 
+const sampleRate = 44100;
 const playMorseCode = (text = "") => {
   if (!audioContext) return;
 
-  const sampleRate = 44100;
   const frequency = 440; // Frecuencia del tono Morse
   const ditDuration = sampleRate * 0.1; // Duración de un punto (100ms)
   const dahDuration = sampleRate * 0.3; // Duración de una raya (300ms)
@@ -143,7 +143,67 @@ const handleInput = (input = "") => {
     rawText.value = "";
   }
 };
+const convertToWav = (buffer: AudioBuffer): Blob => {
+  const wavData = encodeWav(buffer); // Esta función sería la que convierte el buffer a wav (ver más abajo)
+  return new Blob([wavData], { type: 'audio/wav' });
+};
 
+// Función para convertir el AudioBuffer a WAV (una implementación básica)
+const encodeWav = (buffer: AudioBuffer): Uint8Array => {
+  const sampleRate = buffer.sampleRate;
+  const numberOfChannels = buffer.numberOfChannels;
+  const length = buffer.length;
+  const data = new Float32Array(length * numberOfChannels);
+
+  // Aplanar el AudioBuffer en un solo arreglo
+  for (let channel = 0; channel < numberOfChannels; channel++) {
+    data.set(buffer.getChannelData(channel), channel * length);
+  }
+
+  // Crear un array de bytes con los datos WAV
+  const wav = new Uint8Array(44 + length * 2); // 44 bytes para el encabezado
+  const view = new DataView(wav.buffer);
+
+  // Encabezado WAV
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + length * 2, true);
+  writeString(view, 8, 'WAVE');
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true); // Subchunk size
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, numberOfChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * numberOfChannels * 2, true);
+  view.setUint16(32, numberOfChannels * 2, true); // Block align
+  view.setUint16(34, 16, true); // Bits per sample
+  writeString(view, 36, 'data');
+  view.setUint32(40, length * 2, true);
+
+  // Escribir los datos de audio
+  for (let i = 0; i < length; i++) {
+    const sample = Math.max(-1, Math.min(1, data[i]));
+    view.setInt16(44 + i * 2, sample * 0x7FFF, true);
+  }
+
+  return wav;
+};
+
+// Función auxiliar para escribir cadenas de texto en un DataView
+const writeString = (view: DataView, offset: number, string: string): void => {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
+};
+
+const downloadAudio = (buffer: AudioBuffer) => {
+  const wavBlob = convertToWav(buffer);
+  const url = URL.createObjectURL(wavBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'morse-code.wav';
+  link.click();
+  URL.revokeObjectURL(url);
+};
 onBeforeUnmount(() => {
   if (audioContext) {
     audioContext.close();
@@ -151,6 +211,9 @@ onBeforeUnmount(() => {
   }
   playing.value = false;
 });
+
+
+
 
 </script>
 
@@ -170,11 +233,19 @@ onBeforeUnmount(() => {
         <p class="text-cyan-400 text-xl">{{ morsedText }}</p>
       </div>
 
-      <!-- <h2 class="text-lg font-semibold">Audio:</h2>
-        <audio ref="morseCodeAudio" controls>
-          <source :src="morseCodeAudio" type="audio/wav" />
-          Your browser does not support the audio element.
-        </audio> -->
+      <h2 class="text-lg font-semibold">Audio:</h2>
+
+
+
+
+      <p v-if="!rawText" class="text-red-500 mt-4">Please enter text to generate Morse code audio.</p>
+
+      <p v-else-if="playing" class="text-green-500 mt-4">Playing Morse code...</p>
+
+      <button v-if="rawText" @click="downloadAudio(audioContext?.createBuffer(1, sampleRate, sampleRate))"
+        class="bg-green-500/20 rounded-full text-white px-4 p-2 mt-4">
+        Download Audio
+      </button>
 
 
     </div>
