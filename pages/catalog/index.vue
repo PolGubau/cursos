@@ -1,4 +1,13 @@
-<script setup>
+<script setup lang="ts">
+
+useHead({
+  title: "Catalogs",
+  meta: [{ name: "description", content: "Catalogs page description" }],
+  bodyAttrs: {
+    class: "bg-red-900",
+  },
+  
+})
 definePageMeta({
 	title: "Catalogs",
 	meta: [{ name: "description", content: "Catalogs page description" }],
